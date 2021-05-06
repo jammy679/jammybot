@@ -3,3 +3,4 @@ requests==2.25.1
 asyncio==3.4.3
 async-timeout==3.0.1
 asyncpg==0.22.0
+python==3.7.7
