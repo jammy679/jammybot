@@ -78,7 +78,10 @@ async def test(ctx):
     
 @bot.event
 async def on_command_error(ctx,error):
-    await ctx.send('The command `' + ctx.invoked_with + '` is missing the argument: `' + error.param.name + '`')
+    if isinstance(error, discord.ext.commands.errors.MissingRequiredArgument):
+        await ctx.send('The command `' + ctx.invoked_with + '` is missing the argument: `' + error.param.name + '`')
+    elif isinstance(error, discord.ext.commands.errors.CommandNotFound):
+        await ctx.send('That command does not exist. Type !j help for a list of commands.')
 
 @bot.command()
 async def ping(ctx):

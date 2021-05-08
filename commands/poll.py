@@ -11,9 +11,10 @@ pollembed = None
 
 
 class Poll:
-    def __init__(self,name):
+    def __init__(self,name,owner):
         self.name = name
         self.items = {}
+        self.owner = owner
     
     def additem(self, key):
         #format - pollitem: [], where list has list of users that voted for that item
@@ -51,8 +52,8 @@ class PollCog(commands.Cog):
             poll_running = True
             def check_if_author(msg):
                 return msg.author == ctx.author
-            current_poll = Poll(name)
-            await ctx.send("Moderator <@!" + str(ctx.author.id) + "> has started a poll named \'" + name + "\'!")
+            current_poll = Poll(name, ctx.author.id)
+            await ctx.send("<@!" + str(ctx.author.id) + "> has started a poll named \'" + name + "\'!")
     
         
     @commands.command(aliases = ['add'])
@@ -63,17 +64,20 @@ class PollCog(commands.Cog):
         if poll_running == False:
             await ctx.send('There is currently no poll running.')
         else:
-            in_poll = False
-            for key, value in (current_poll.items).items():
-                if key == item:
-                    await ctx.send('That item is already in the poll.')
-                    in_poll = True
-                    break
-            if not in_poll:
-                current_poll.additem(item)
-                await ctx.send('Added!')
-                if pollembed != None:
-                    await self.update(ctx)        
+            if ctx.author.id == current_poll.owner:
+                in_poll = False
+                for key, value in (current_poll.items).items():
+                    if key == item:
+                        await ctx.send('That item is already in the poll.')
+                        in_poll = True
+                        break
+                if not in_poll:
+                    current_poll.additem(item)
+                    await ctx.send('Added!')
+                    if pollembed != None:
+                        await self.update(ctx)        
+            else:
+                await ctx.send('Only the owner, <@!' + str(current_poll.owner) + '>, can add or remove items from the current poll.')
     
     @commands.command(aliases = ['remove'])
     async def pollremove(self,ctx,*,item):
@@ -83,18 +87,21 @@ class PollCog(commands.Cog):
         if poll_running == False:
             await ctx.send('There is currently no poll running.')
         else:
-            in_poll = False
-            for key,value in (current_poll.items).items():
-                if key == item:
-                    current_poll.removeitem(item)
-                    in_poll = True 
-                    await ctx.send('Removed!')
-                    if pollembed != None:
-                        await self.update(ctx)        
-                    break
+            if ctx.author.id == current_poll.owner:
+                in_poll = False
+                for key,value in (current_poll.items).items():
+                    if key == item:
+                        current_poll.removeitem(item)
+                        in_poll = True 
+                        await ctx.send('Removed!')
+                        if pollembed != None:
+                            await self.update(ctx)        
+                        break
 
-            if not in_poll:
-                await ctx.send('That item is not in the poll.')
+                if not in_poll:
+                    await ctx.send('That item is not in the poll.')
+            else:
+                await ctx.send('Only the owner, <@!' + str(current_poll.owner) +'>, can add or remove items from the current poll.')
     
     #command supposed to not be available to users
     @commands.command()
@@ -171,7 +178,7 @@ class PollCog(commands.Cog):
                 pollembed.add_field(name = 'Votes', value = value_str, inline = True)
                 pollmsg = await ctx.send(embed = pollembed)
     
-    @commands.command()
+    @commands.command(aliases = ['end'])
     async def endpoll(self,ctx):
         global pollembed
         global poll_running
@@ -179,21 +186,59 @@ class PollCog(commands.Cog):
         if not poll_running:
             await ctx.send('There is currently no poll running.')
         else:
-            keys = [k for k,v in (current_poll.items).items()]
-            values = [v for k,v in (current_poll.items).items()]
-            if not keys or len(keys) == 1:
-                await ctx.send('Poll cancelled.')
-                poll_running = False
+            if ctx.author.id == current_poll.owner:
+                keys = [k for k,v in (current_poll.items).items()]
+                values = [len(v) for k,v in (current_poll.items).items()]
+                if not keys or len(keys) == 1:
+                    await ctx.send('Poll cancelled.')
+                    poll_running = False
+                else:
+                    highest_item = keys[0] 
+                    highest_value = values[0] 
+                    tied = [0] 
+                    for i in range(1,len(values)):
+                        if values[i] > highest_value:
+                            highest_value = values[i] 
+                            highest_item = keys[i]
+                            tied = [i]
+                        elif values[i] == highest_value:
+                            tied.append(i)
+
+                        #check if tied
+
+                    await ctx.send('<a:shakingbell:839095524187176970> Here are the final results! <a:shakingbell:839095524187176970>', embed = pollembed)
+                    if len(tied) > 1:
+                        for i in range(1,len(tied)-1):
+                            highest_item += ', ' + keys[tied[i]]
+                        highest_item += ' and ' + keys[tied[len(tied)-1]]
+                        await ctx.send('<a:sparklecolors:839827975418675211> `' + highest_item + '` tied with `' + str(highest_value) + '` votes! <a:sparklecolors:839827975418675211>')
+                    else: 
+                        await ctx.send('<a:sparklecolors:839827975418675211> `' + highest_item + '` won the poll with `' + str(highest_value) + '` votes! <a:sparklecolors:839827975418675211>')
+                    poll_running = False
             else:
-                highest_item = '' 
-                highest_value = 0
-                for i in range(len(values)):
-                    if values[i] > highest_value:
-                        highest_value = values[i] 
-                        highest_item = keys[i]
-                await ctx.send('<a:shakingbell:839095524187176970> Here are the final results! <a:shakingbell:839095524187176970>', embed = pollembed)
-                await ctx.send('<a:sparklecolors:839827975418675211> `' + highest_item + '` won the poll with `' + highest_value + '` votes! <a:sparklecolors:839827975418675211>')
-                poll_running = False
+                await ctx.send('Only the owner, <@!' + str(current_poll.owner) +'>, can end the current poll.')
+    
+    @commands.command()
+    async def pollhelp(self,ctx):
+        phelp = discord.Embed(
+            title = 'Poll commands',
+            colour = discord.Colour.blurple(),
+            description = 'Format: `!j <command name>`'
+        )
+        commands = [
+            '`startpoll` - start a poll\n',
+            '`polladd (or add)` - add an item to the poll **(only the owner of the poll can do this)**\n',
+            '`pollremove (or remove)` - remove an item from the poll **(only the owner of the poll can do this)**\n',
+            '`endpoll (or end)` - end/cancel the poll\n',
+            '`vote` - vote for an item in the poll\n',
+            '`poll` - view the poll\n'
+        ]
+        cmd_str =''
+        for c in commands:
+            cmd_str += c
+        phelp.add_field(name = 'Commands', value = cmd_str, inline = False)
+        await ctx.send(embed = phelp)
+
 
         
 def setup(bot):
