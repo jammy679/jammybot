@@ -43,7 +43,8 @@ async def help(ctx):
         'fun`fact` - get a random fact!',
         'uti`timein (or ti) <city>` - find the time in a city',
         'fun`scramble` - unscramble a word and win points!',
-        'uti`pollhelp` - view commands for making a poll' 
+        'uti`pollhelp` - view commands for making a poll',
+        'fun`trivia` - get a trivia question and win points!' 
         ] 
     fc = ''
     uc = ''

@@ -16,7 +16,6 @@ class Games(commands.Cog):
 
     @commands.command()
     async def scramble(self,ctx):
-        conn = self.bot.pg_con
         with open('commands/google-10000-english.txt','r') as words_file:
             lines = words_file.readlines()
             line = random.choice(lines)
@@ -47,7 +46,7 @@ class Games(commands.Cog):
                     try:
                         guess = await self.bot.wait_for('message', check = check, timeout = 10.0)
                         if guess.content == line:
-                            await ctx.send('Correct! <@!{}> got it right! <:PogU:715897075249971230> +{} points {}'.format(guess.author.id, str(points), hint_text))
+                            await ctx.send('Correct! <@!{}> got it right! <a:correct:839094567609434174> +{} points {}'.format(guess.author.id, str(points), hint_text))
                             finished = True
                         else:
                             number_of_guesses += 1
@@ -60,10 +59,10 @@ class Games(commands.Cog):
                                 else:
                                     points = 0
                     except asyncio.TimeoutError:
-                        await ctx.send('Times up! The word was \'' + line + '\'!🔔')
+                        await ctx.send('Times up! The word was \'' + line + '\'! <a:shakingbell:839095524187176970>')
                         finished = True
                 if number_of_guesses == 8:
-                    await ctx.send('You\'re out of guesses! The word was \''+ line + '\'!🔔')
+                    await ctx.send('You\'re out of guesses! The word was \''+ line + '\'! <a:wrong:839094469173182484>')
                 
     @commands.command()
     async def trivia(self,ctx):
@@ -129,7 +128,7 @@ class Games(commands.Cog):
                 try:
                     msg = await self.bot.wait_for('message', check = user_ans, timeout = 15.0)
                     if msg.content.lower() in correct:
-                        await ctx.send('<a:correct:839094567609434174> Correct! <@!' + str(msg.author.id) + '> got it right! 🎉' + '+' + points + ' points') 
+                        await ctx.send('<a:correct:839094567609434174> Correct! <@!' + str(msg.author.id) + '> got it right! 🎉' + '+' + str(points) + ' points') 
                         answered = True
                     else:
                         guesses += 1
