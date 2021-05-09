@@ -12,6 +12,10 @@ bot.remove_command('help')
 
 
 
+#points system does not work
+#suggestions command still not made yet
+#the following command wont work because it uses sqlite3
+
 #@bot.event
 #async def on_guild_join(guild):
     #conn = sqlite3.connect('discord_server.db')
