@@ -229,7 +229,7 @@ class PollCog(commands.Cog):
             '`startpoll` - start a poll\n',
             '`polladd (or add)` - add an item to the poll **(only the owner of the poll can do this)**\n',
             '`pollremove (or remove)` - remove an item from the poll **(only the owner of the poll can do this)**\n',
-            '`endpoll (or end)` - end/cancel the poll\n',
+            '`endpoll (or end)` - end/cancel the poll **(only the owner of the poll can do this)**\n',
             '`vote` - vote for an item in the poll\n',
             '`poll` - view the poll\n'
         ]

@@ -3,28 +3,31 @@ from discord.ext import commands
 import requests
 import sqlite3
 import os
+import asyncpg
 
 intents = discord.Intents.default()
 intents.members = True
 bot = commands.Bot(command_prefix = '!j ', intents = intents)
 bot.remove_command('help')
 
-@bot.event
-async def on_guild_join(guild):
-    conn = sqlite3.connect('discord_server.db')
-    c= conn.cursor()
-    c.execute('''CREATE TABLE IF NOT EXISTS {}(
-        id INTEGER PRIMARY KEY,
-        user TEXT,
-        points INTEGER
-    )
-    '''.format("\'" + str(guild.name) + 's leaderboard' + "\'"))
-    conn.commit()
-    members_list = guild.members 
-    for user in members_list:
-        if user.bot == False:
-            c.execute("INSERT INTO {} (user, points) VALUES({}, 0)".format("\'" + str(guild.name) + 's leaderboard' + "\'", "\'" + user.name+ "\'"))
-            conn.commit()
+
+
+#@bot.event
+#async def on_guild_join(guild):
+    #conn = sqlite3.connect('discord_server.db')
+    #c= conn.cursor()
+    #c.execute('''CREATE TABLE IF NOT EXISTS {}(
+        #id INTEGER PRIMARY KEY,
+        #user TEXT,
+        #points INTEGER
+    #)
+    #'''.format("\'" + str(guild.name) + 's leaderboard' + "\'"))
+    #conn.commit()
+    #members_list = guild.members 
+    #for user in members_list:
+        #if user.bot == False:
+            #c.execute("INSERT INTO {} (user, points) VALUES({}, 0)".format("\'" + str(guild.name) + 's leaderboard' + "\'", "\'" + user.name+ "\'"))
+            #conn.commit()
 
 #add on user join and add to database
 
@@ -55,9 +58,6 @@ async def help(ctx):
     helpemb.add_field(name='Utility commands', value = uc, inline = False)
     await ctx.send(embed=helpemb)
 
-@bot.command()
-async def studytime(ctx):
-    pass
 
 @bot.event
 async def on_ready():
@@ -68,13 +68,6 @@ async def on_ready():
 async def test(ctx):
     await ctx.send('hello!')
 
-#@bot.command()
-#async def inputtest(ctx):
-    #msg = await ctx.send('Type something you want me to say.')
-    #def check(checking):
-        #return checking.content != '' and ctx.message.author == checking.author
-    #msg = await bot.wait_for('message', check = check, timeout = 30.0)
-    #await ctx.send(msg.content)
     
 @bot.event
 async def on_command_error(ctx,error):
@@ -99,5 +92,6 @@ async def unload(ctx,extension):
 for filename in os.listdir('./commands'):
     if filename.endswith('.py'):
         bot.load_extension(f'commands.{filename[:-3]}')
+
 
 bot.run(AUTH_TOKEN)

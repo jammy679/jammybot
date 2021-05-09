@@ -9,12 +9,14 @@ import string
 global trivia_in_use
 trivia_in_use = False
 
+
 class Games(commands.Cog):
     def __init__(self,bot):
         self.bot = bot
 
     @commands.command()
     async def scramble(self,ctx):
+        conn = self.bot.pg_con
         with open('commands/google-10000-english.txt','r') as words_file:
             lines = words_file.readlines()
             line = random.choice(lines)
