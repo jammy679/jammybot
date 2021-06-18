@@ -79,6 +79,10 @@
 		padding: 30px 200px 30px;
 		background-color: #edd1d1;
 		overflow: hidden;	
+		position:relative;
+		margin-left: auto;
+		margin-right: auto;
+		max-width: 1600px;
 	}
 
 	.info {

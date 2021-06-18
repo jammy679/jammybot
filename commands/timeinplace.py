@@ -29,7 +29,7 @@ class TimeIn(commands.Cog):
         msg = await ctx.send('Finding...')
         timezone = fetch_timezone(city) 
         if timezone == False:
-            await ctx.send('Could not find that city.')
+            await msg.edit(content ='Could not find that city.')
         else:
             url = 'http://worldtimeapi.org/api/timezone/{}'.format(timezone)
             req = requests.get(url= url)

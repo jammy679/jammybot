@@ -104,7 +104,6 @@ class PollCog(commands.Cog):
                 await ctx.send('Only the owner, <@!' + str(current_poll.owner) +'>, can add or remove items from the current poll.')
     
     #command supposed to not be available to users
-    @commands.command()
     async def update(self,ctx):
         global pollembed
         global pollmsg
@@ -226,11 +225,11 @@ class PollCog(commands.Cog):
             description = 'Format: `!j <command name>`'
         )
         commands = [
-            '`startpoll` - start a poll\n',
-            '`polladd (or add)` - add an item to the poll **(only the owner of the poll can do this)**\n',
-            '`pollremove (or remove)` - remove an item from the poll **(only the owner of the poll can do this)**\n',
+            '`startpoll <name of poll>` - start a poll\n',
+            '`polladd (or add) <item>` - add an item to the poll **(only the owner of the poll can do this)**\n',
+            '`pollremove (or remove) <item>` - remove an item from the poll **(only the owner of the poll can do this)**\n',
             '`endpoll (or end)` - end/cancel the poll **(only the owner of the poll can do this)**\n',
-            '`vote` - vote for an item in the poll\n',
+            '`vote <item in poll>` - vote for an item in the poll\n',
             '`poll` - view the poll\n'
         ]
         cmd_str =''

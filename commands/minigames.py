@@ -7,62 +7,67 @@ import html
 import string
 
 global trivia_in_use
+global scramble_in_use
 trivia_in_use = False
-
+scramble_in_use = False
 
 class Games(commands.Cog):
     def __init__(self,bot):
         self.bot = bot
 
+    #@commands.Cog.listener()
+    #async def on_guild_
+
     @commands.command()
     async def scramble(self,ctx):
-        with open('commands/google-10000-english.txt','r') as words_file:
-            lines = words_file.readlines()
-            line = random.choice(lines)
-            line = line.strip()
-            if len(line) > 4:
-                scrambled = ''
-                word = [letter for letter in line]
-                for letter in line:
-                    choice = random.choice(word)
-                    scrambled += choice 
-                    word.remove(choice)
-                await ctx.send('Unscramble the following: ' + scrambled + ' <:PepoThink:832072234608099369>')
-                def check(guess):
-                    return guess.author.bot == False 
-                finished = False
-                number_of_guesses = 0
-                points = 0
-                hint_text =''
-                if len(line) > 12:
-                    points = 10
-                elif len(line) > 8 and len(line) < 12:
-                    points = 6 
-                elif len(line) > 6 and len(line) <= 8:
-                    points = 4 
-                else:
-                    points = 1 
-                while not finished and number_of_guesses != 8:
-                    try:
-                        guess = await self.bot.wait_for('message', check = check, timeout = 10.0)
-                        if guess.content == line:
-                            await ctx.send('Correct! <@!{}> got it right! <a:correct:839094567609434174> +{} points {}'.format(guess.author.id, str(points), hint_text))
-                            finished = True
-                        else:
-                            number_of_guesses += 1
-                            if number_of_guesses == 4:
-                                dash = ' _'*(len(line)-1)
-                                await ctx.send('💡Hint: `' + line[:1] + dash + '`')
-                                hint_text = '(Hint used)'
-                                if points >1:
+        global scramble_in_use
+        if scramble_in_use:
+            await ctx.send('There is already scramble game running.')
+        else:
+            with open('commands/google-10000-english.txt','r') as words_file:
+                lines = words_file.readlines()
+                line = random.choice(lines)
+                line = line.strip()
+                if len(line) > 4:
+                    scrambled = ''
+                    word = [letter for letter in line]
+                    for letter in line:
+                        choice = random.choice(word)
+                        scrambled += choice 
+                        word.remove(choice)
+                    await ctx.send('Unscramble the following: ' + scrambled + ' <:PepoThink:832072234608099369>')
+                    def check(guess):
+                        return guess.author.bot == False 
+                    finished = False
+                    number_of_guesses = 0
+                    points = 0
+                    hint_text =''
+                    if len(line) > 12:
+                        points = 10
+                    elif len(line) > 8 and len(line) < 12:
+                        points = 6 
+                    elif len(line) > 6 and len(line) <= 8:
+                        points = 4 
+                    else:
+                        points = 2 
+                    while not finished and number_of_guesses != 8:
+                        try:
+                            guess = await self.bot.wait_for('message', check = check, timeout = 10.0)
+                            if guess.content == line:
+                                await ctx.send('Correct! <@!{}> got it right! <a:correct:839094567609434174> +{} points {}'.format(guess.author.id, str(points), hint_text))
+                                finished = True
+                            else:
+                                number_of_guesses += 1
+                                if number_of_guesses == 4:
+                                    dash = ' _'*(len(line)-1)
+                                    await ctx.send('💡Hint: `' + line[:1] + dash + '`')
+                                    hint_text = '(Hint used)'
                                     points = int(points / 2) 
-                                else:
-                                    points = 0
-                    except asyncio.TimeoutError:
-                        await ctx.send('Times up! The word was \'' + line + '\'! <a:shakingbell:839095524187176970>')
-                        finished = True
-                if number_of_guesses == 8:
-                    await ctx.send('You\'re out of guesses! The word was \''+ line + '\'! <a:wrong:839094469173182484>')
+                        except asyncio.TimeoutError:
+                            await ctx.send('Times up! The word was \'' + line + '\'! <a:shakingbell:839095524187176970>')
+                            finished = True
+                    if number_of_guesses == 8:
+                        await ctx.send('You\'re out of guesses! The word was \''+ line + '\'! <a:wrong:839094469173182484>')
                 
     @commands.command()
     async def trivia(self,ctx):
@@ -110,7 +115,9 @@ class Games(commands.Cog):
             triviaembed.set_author(name = question['difficulty'], icon_url = difficulties[question['difficulty']])
 
             def user_ans(answer):
-                return answer.author.bot == False
+                k = ' '.join(answers.keys())
+                v = ' '.join(answers.values())
+                return answer.author.bot == False and (answer.content.lower() in k or answer.content.lower() in v)
             answered = False
             guesses = 0
             points = 0
