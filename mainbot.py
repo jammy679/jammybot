@@ -16,19 +16,8 @@ bot.remove_command('help')
 
 
 async def create_db_pool():
-
-
     bot.pg_con = await asyncpg.create_pool(DATABASE_URL)
 
-
-#points system does not work
-#suggestions command still not made yet
-#the following command wont work because it uses sqlite3
-
-#@bot.event
-#async def on_guild_join(guild):
-
-#add on user join and add to database
 
 # !!! IMPORTANT - POSTGRESQL DOES NOT LIKE TABLE NAMES WITH UPPERCASE LETTERS !!!
 
