@@ -180,7 +180,15 @@ class Fun(commands.Cog):
         points_text = ''
         for i in range(len(users_points)):
             points_text += str(users_points[i][1]) + '\n'
-            user_text += "`" + str(i+1) + "` " + users[i].name + '\n'
+            if i == 0:
+                user_text += "`" + str(i+1) + "` 🥇 " + users[i].name + '\n'
+            elif i == 1:
+                user_text += "`" + str(i+1) + "` 🥈 " + users[i].name + '\n'
+            elif i == 2:
+                user_text += "`" + str(i+1) + "` 🥉 " + users[i].name + '\n'
+            else:
+                user_text += "`" + str(i+1) + "` " + users[i].name + '\n'
+
 
         board = discord.Embed(
             title = 'Leaderboard!!',
