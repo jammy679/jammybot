@@ -15,6 +15,7 @@ bot.remove_command('help')
 
 
 
+
 async def create_db_pool():
     bot.pg_con = await asyncpg.create_pool(DATABASE_URL)
 
@@ -51,7 +52,9 @@ async def help(ctx):
         'fun`fact` - get a random fact!',
         'uti`timein (or ti) <city>` - find the time in a city',
         'fun`scramble` - unscramble a word and win points!',
-        'fun`trivia` - get a trivia question and win points!' 
+        'fun`trivia` - get a trivia question and win points!', 
+        'fun`leaderboard` - view the leaderboard',
+        'uti`weather <city>` - get the 5 day forecast of a city'
         ] 
     fc = ''
     uc = ''
