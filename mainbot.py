@@ -28,33 +28,27 @@ async def create_db_pool():
 #@bot.event
 #async def on_guild_join(guild):
 
-#@bot.command()
-#async def make_table(ctx):
-    #await bot.pg_con.execute("""
-    #CREATE TABLE IF NOT EXISTS {} (
-        #user TEXT NOT NULL, 
-        #points INTEGER
-        #)""".format(ctx.guild.name + "_leaderboard"))
-    #members_list = ctx.guild.members 
-    #for user in members_list:
-        #if user.bot == F   alse:
-            #await bot.pg_con.execute("INSERT INTO {} (user, points) VALUES({}, 0)".format(str(ctx.guild.name) + 's leaderboard', user.name))
-
-
 #add on user join and add to database
 
-@bot.command()
-async def make_table(ctx):
-    sdfdsf = await bot.pg_con.fetch("SELECT suggestion FROM Suggestions")
-    await bot.pg_con.execute("""
-    CREATE TABLE IF NOT EXISTS {} (
-        user TEXT NOT NULL, 
-        points INTEGER
-        )""".format(ctx.guild.name + "_leaderboard"))
-    members_list = ctx.guild.members 
+# !!! IMPORTANT - POSTGRESQL DOES NOT LIKE TABLE NAMES WITH UPPERCASE LETTERS !!!
+
+@bot.event
+async def on_guild_join(guild):
+    #column cannot be named 'user'
+    await bot.pg_con.execute("""CREATE TABLE IF NOT EXISTS {}(user_id TEXT, points INTEGER)""".format("\""+str(guild.id) + "_leaderboard\"")) #userid is text because integer has numeric limit
+    list_users = await bot.pg_con.fetch("SELECT user_id FROM \"{}_leaderboard\"".format(str(guild.id)))
+    members_list = guild.members 
     for user in members_list:
         if user.bot == False:
-            await bot.pg_con.execute("INSERT INTO {} (user, points) VALUES({}, 0)".format(str(ctx.guild.name) + 's leaderboard', user.name))
+            await bot.pg_con.execute("INSERT INTO {} (user_id, points) VALUES ({}, 0);".format("\""+str(guild.id) + '_leaderboard\"', "\'"+str(user.id)+"\'"))
+
+#when user join add them to leaderboard with 0 points, if they were in server before don't add them again
+@bot.event
+async def on_member_join(member):
+    list_users = await bot.pg_con.fetch("SELECT user_id FROM \"{}_leaderboard\"".format(str(member.guild.id)))
+    list_users = [(list(u))[0] for u in list_users] #convert record object to list, for some reason cannot use its attributes
+    if str(member.id) not in list_users:
+        await bot.pg_con.execute("INSERT INTO {} (user_id, points) VALUES ({}, 0);".format("\""+str(member.guild.id) + '_leaderboard\"', "\'"+str(member.id)+"\'"))
 
 @bot.command()
 async def help(ctx):

@@ -5,6 +5,7 @@ import random
 import asyncio
 import html
 import string
+import asyncpg
 
 global trivia_in_use
 global scramble_in_use
@@ -68,7 +69,14 @@ class Games(commands.Cog):
                             finished = True
                     if number_of_guesses == 8:
                         await ctx.send('You\'re out of guesses! The word was \''+ line + '\'! <a:wrong:839094469173182484>')
-                
+                    await self.update_points(guess.author.id, points, ctx.guild.id)
+
+    async def update_points(self,userid, points,guildid):
+        user_points = await self.bot.pg_con.fetch("SELECT points FROM \"{}_leaderboard\" WHERE user_id = \'{}\'".format(str(guildid), str(userid)))
+        user_points= [list(u)[0] for u in user_points][0]
+        user_points += points
+        await self.bot.pg_con.execute("UPDATE \"{}_leaderboard\" SET points = {} WHERE user_id = \'{}\'".format(str(guildid), str(user_points), str(userid)))
+
     @commands.command()
     async def trivia(self,ctx):
         global trivia_in_use
@@ -92,7 +100,7 @@ class Games(commands.Cog):
             options = question['incorrect_answers']
             options.append(question['correct_answer'])
             ans_text = ''  
-            difficulties = {'hard':'https://stoffe.kawaiifabric.com/images/product_images/large_img/solid-red-fabric-Robert-Kaufman-USA-Red-179485-1.JPG', 'medium':'https://paperpackagingplace.com/wp-content/uploads/2016/01/Buttercup-Yellow.jpg', 'easy':'https://images-na.ssl-images-amazon.com/images/I/110CrE7egKL._SX322_BO1,204,203,200_.jpg'}
+            difficulties = {'hard':'https://stoffe.kawaiifabric.com/images/product_images/large_img/solid-red-fabric-Robert-Kaufman-USA-Red-179485-1.JPG', 'medium':'https://paperpackagingplace.com/wp-content/uploads/2016/01/Buttercup-Yellow.jpg', 'easy':'https://www.deckleedge.co.za/wp-content/uploads/2017/12/9064ed2c814cf785ca71638dd2102b099281f0fa.jpg'}
 
             if question['type'] == 'multiple':
                 letters = [letter for letter in string.ascii_uppercase]
@@ -115,9 +123,13 @@ class Games(commands.Cog):
             triviaembed.set_author(name = question['difficulty'], icon_url = difficulties[question['difficulty']])
 
             def user_ans(answer):
-                k = ' '.join(answers.keys())
-                v = ' '.join(answers.values())
-                return answer.author.bot == False and (answer.content.lower() in k or answer.content.lower() in v)
+                if question['type'] == 'multiple':
+                    k = ' '.join(answers.keys())
+                    v = ' '.join(answers.values())
+                    return answer.author.bot == False and (answer.content.lower() in k.lower() or answer.content.lower() in v.lower())
+                elif question['type'] == 'boolean':
+                    o = ' '.join(options)
+                    return answer.author.bot == False and answer.content.lower() in o.lower()
             answered = False
             guesses = 0
             points = 0
@@ -125,12 +137,12 @@ class Games(commands.Cog):
             await ctx.send(embed = triviaembed)
 
             if question['difficulty'] == 'hard':
-                points = 8
+                points = 6
             elif question['difficulty'] == 'medium':
-                points = 6 
-            elif question['difficulty'] == 'easy':
                 points = 4
-
+            elif question['difficulty'] == 'easy':
+                points = 2
+            msg = ''
             while not answered:
                 try:
                     msg = await self.bot.wait_for('message', check = user_ans, timeout = 15.0)
@@ -156,9 +168,31 @@ class Games(commands.Cog):
                     await ctx.send('<a:shakingbell:839095524187176970> Times up! The correct answer was \''+ html.unescape(question['correct_answer']) + '\'! 0 points earned.')
                     answered = True
             trivia_in_use = False
+            await self.update_points(msg.author.id, points, ctx.guild.id)
 
-    #@commands.command()
-    #async def 
+    @commands.command()
+    async def leaderboard(self,ctx):
+        users_points = await self.bot.pg_con.fetch("SELECT * FROM \"{}_leaderboard\"".format(str(ctx.guild.id)))
+        users_points = [tuple(u) for u in users_points]
+        def second_elem(elem):
+            return elem[1]
+        users_points.sort(key=second_elem, reverse=True)
+        users= [self.bot.get_user(int(u[0])) for u in users_points]
+
+        user_text= ''
+        points_text = ''
+        for i in range(len(users_points)):
+            points_text += str(users_points[i][1]) + '\n'
+            user_text += "`" + str(i+1) + "` " + users[i].name + '\n'
+
+        board = discord.Embed(
+            title = 'Leaderboard!!',
+            colour = discord.Colour.dark_red()
+        )
+
+        board.add_field(name='User', value=user_text, inline=True)
+        board.add_field(name='Points', value=points_text, inline=True)
+        await ctx.send(embed = board)
 
         
 
