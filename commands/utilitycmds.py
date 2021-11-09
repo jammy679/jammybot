@@ -9,7 +9,7 @@ def fetch_timezone(place):
         timezones = timezones.readlines()
         for timezone in timezones:
             timezone = timezone.strip()
-            if place in timezone.lower():                    
+            if place.lower() in timezone.lower():                    
                 tz = timezone
                 break     
         
@@ -38,8 +38,8 @@ class Utility(commands.Cog):
             name = name[len(name) - 1].split('_')
             name = ' '.join(name)
             time = resp_time['datetime'][11:16] 
-            date = datetime.datetime.strptime(resp_time['datetime'][0:10], '%Y-%m-%d')
-            date = datetime.datetime.strftime(date,'%A %B %m, %Y')
+            date = datetime.datetime.strptime(resp_time['datetime'][:10], '%Y-%m-%d') # string into datetime object
+            date = datetime.datetime.strftime(date,'%A %B %d, %Y') # datetime object to string, turned into object to change format of the date in string form  
             timeembed = discord.Embed(
                 title = name,
                 colour = discord.Colour.from_rgb(35, 81, 105)
@@ -82,7 +82,7 @@ class Utility(commands.Cog):
         )
         emojis = {'Clear':'☀️', 'Clouds':'☁️','Rain':'🌧️'}
         for weather in days:
-            text = '🌡️ Temperature °C: `' + str(round(weather['temp'], 2)) + '`\n☀️ Real-feel: `' + str(round(weather['realfeel'],2)) + '`\n'
+            text = '🌡️ Temperature °C: `' + str(round(weather['temp'], 2)) + '`\n☀️ Real-feel °C: `' + str(round(weather['realfeel'],2)) + '`\n'
             date_obj = datetime.datetime.strptime(weather['date'],'%Y-%m-%d')
             weekday = weekdays[date_obj.weekday()]
             forecast.add_field(name=weekday + ' ' + emojis[weather['desc']], value = text, inline = False)

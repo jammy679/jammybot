@@ -5,6 +5,7 @@ html, body {
 	overflow-y: overlay;
 	scrollbar-width: thin;
 	scrollbar-color: #705959 #d19e9e;
+	background-color: #edd1d1;
 }
 
 body {

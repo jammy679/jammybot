@@ -2,6 +2,7 @@
 	export let name;
 	export let utilities;
 	export let minigames;
+	export let other;
 </script>
 
 <main>
@@ -11,14 +12,14 @@
 	<div class = 'content'>
 		<div class = 'add-bot'>
 			<a href = 'https://discord.com/api/oauth2/authorize?client_id=788643876876976139&permissions=3691510896&scope=bot' target='_blank'>
-				<img src = 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Eo_circle_pink_letter-j.svg/768px-Eo_circle_pink_letter-j.svg.png' alt = 'discord logo' class = 'discord-logo'>
+				<img src = 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Eo_circle_pink_letter-j.svg/768px-Eo_circle_pink_letter-j.svg.png' alt = 'bot logo' class = 'discord-logo'>
 			</a>
 			<h2>Add this bot!</h2>
 		</div>
 		<div class = 'info'>
 			<div id= 'about'>
 				<h1>About</h1>	
-				<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+				<p>A simple bot that makes your server a bit more lively with games and many other commands!</p>
 			</div>
 			<div id= 'features'>
 				<h1>Features</h1>
@@ -31,6 +32,10 @@
 					<h2>Minigames</h2>
 					<ul>
 						{@html minigames}	
+					</ul>
+					<h2>Other commands</h2>
+					<ul>
+						{@html other}
 					</ul>
 				</div>
 			</div>

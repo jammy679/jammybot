@@ -7,66 +7,70 @@ import html
 import string
 import asyncpg
 
-global trivia_in_use
-global scramble_in_use
-trivia_in_use = False
-scramble_in_use = False
-
 class Fun(commands.Cog):
     def __init__(self,bot):
         self.bot = bot
+        self.scramble_in_use = False
+        self.trivia_in_use = False
 
     @commands.command()
     async def scramble(self,ctx):
-        global scramble_in_use
-        if scramble_in_use:
+        if self.scramble_in_use:
             await ctx.send('There is already scramble game running.')
         else:
-            with open('commands/google-10000-english.txt','r') as words_file:
-                lines = words_file.readlines()
-                line = random.choice(lines)
-                line = line.strip()
-                if len(line) > 4:
-                    scrambled = ''
-                    word = [letter for letter in line]
-                    for letter in line:
-                        choice = random.choice(word)
-                        scrambled += choice 
-                        word.remove(choice)
-                    await ctx.send('Unscramble the following: ' + scrambled + ' <:PepoThink:832072234608099369>')
-                    def check(guess):
-                        return guess.author.bot == False 
-                    finished = False
-                    number_of_guesses = 0
-                    points = 0
-                    hint_text =''
-                    if len(line) > 12:
-                        points = 10
-                    elif len(line) > 8 and len(line) < 12:
-                        points = 6 
-                    elif len(line) > 6 and len(line) <= 8:
-                        points = 4 
+            self.scramble_in_use = True
+            ans = ''    
+            while len(ans) <= 4:
+                with open('commands/google-10000-english.txt','r') as words_file:
+                    lines = words_file.readlines()
+                    ans = random.choice(lines)
+                    ans = ans.strip()
+
+            scrambled = ''
+            word = [letter for letter in ans]
+            for letter in ans:
+                choice = random.choice(word)
+                scrambled += choice 
+                word.remove(choice)
+            await ctx.send('Unscramble the following: ' + scrambled)
+
+            #answering algorithm
+            def check(guess):
+                return guess.author.bot == False 
+            finished = False
+            number_of_guesses = 0
+            points = 0
+            hint_text =''
+            if len(ans) > 12:
+                points = 10
+            elif len(ans) > 8 and len(ans) < 12:
+                points = 6 
+            elif len(ans) > 6 and len(ans) <= 8:
+                points = 4 
+            else:
+                points = 2 
+            while not finished and number_of_guesses != 8:
+                guess = ''
+                try:
+                    guess = await self.bot.wait_for('message', check = check, timeout = 10.0)
+                    if guess.content == ans:
+                        await ctx.send('Correct! <@!{}> got it right! <a:correct:839094567609434174> +{} points {}'.format(guess.author.id, str(points), hint_text))
+                        finished = True
                     else:
-                        points = 2 
-                    while not finished and number_of_guesses != 8:
-                        try:
-                            guess = await self.bot.wait_for('message', check = check, timeout = 10.0)
-                            if guess.content == line:
-                                await ctx.send('Correct! <@!{}> got it right! <a:correct:839094567609434174> +{} points {}'.format(guess.author.id, str(points), hint_text))
-                                finished = True
-                            else:
-                                number_of_guesses += 1
-                                if number_of_guesses == 4:
-                                    dash = ' _'*(len(line)-1)
-                                    await ctx.send('💡Hint: `' + line[:1] + dash + '`')
-                                    hint_text = '(Hint used)'
-                                    points = int(points / 2) 
-                        except asyncio.TimeoutError:
-                            await ctx.send('Times up! The word was \'' + line + '\'! <a:shakingbell:839095524187176970>')
-                            finished = True
-                    if number_of_guesses == 8:
-                        await ctx.send('You\'re out of guesses! The word was \''+ line + '\'! <a:wrong:839094469173182484>')
-                    await self.update_points(guess.author.id, points, ctx.guild.id)
+                        number_of_guesses += 1
+                        if number_of_guesses == 4:
+                            dash = ' _'*(len(ans)-1)
+                            await ctx.send('💡Hint: `' + ans[:1] + dash + '`')
+                            hint_text = '(Hint used)'
+                            points = int(points / 2) 
+                except asyncio.TimeoutError:
+                    await ctx.send('Times up! The word was \'' + ans + '\'! <a:shakingbell:839095524187176970>')
+                    finished = True
+            if number_of_guesses == 8:
+                await ctx.send('You\'re out of guesses! The word was \''+ ans + '\'! <a:wrong:839094469173182484>')
+            if guess != '':
+                await self.update_points(guess.author.id, points, ctx.guild.id)
+            self.scramble_in_use = False 
 
     async def update_points(self,userid, points,guildid):
         user_points = await self.bot.pg_con.fetch("SELECT points FROM \"{}_leaderboard\" WHERE user_id = \'{}\'".format(str(guildid), str(userid)))
@@ -76,15 +80,16 @@ class Fun(commands.Cog):
 
     @commands.command()
     async def trivia(self,ctx):
-        global trivia_in_use
-        if trivia_in_use == True:
+        if self.trivia_in_use:
             await ctx.send('There is already a trivia game running.')
         else:
-            trivia_in_use = True
+            self.trivia_in_use = True
             trivia_api = "https://opentdb.com/api.php?amount=1"
             req = requests.get(url = trivia_api)
+            print(req.json())
             question = req.json()['results'][0]
             q = html.unescape(question['question'])
+
 
             triviaembed = discord.Embed(
                 title = 'Trivia',
@@ -101,6 +106,7 @@ class Fun(commands.Cog):
 
             if question['type'] == 'multiple':
                 letters = [letter for letter in string.ascii_uppercase]
+                # randomises order of answers
                 for i in range(len(question['incorrect_answers'])):
                     choice = random.choice(options)
                     if choice == question['correct_answer']:
@@ -108,8 +114,7 @@ class Fun(commands.Cog):
                         correct = [(letters[i]).lower(), choice.lower()]
                     answers[letters[i]] = choice
                     options.remove(choice)
-                for key,value in answers.items():
-                    ans_text += '**'+key + '.** ' + value + '\n'
+                    ans_text += '**' + letters[i] + '.** ' + choice + '\n'
 
             elif question['type'] == 'boolean':
                 ans_text = 'True or False'
@@ -133,6 +138,8 @@ class Fun(commands.Cog):
         
             await ctx.send(embed = triviaembed)
 
+            #answering algorithm
+
             if question['difficulty'] == 'hard':
                 points = 6
             elif question['difficulty'] == 'medium':
@@ -144,7 +151,7 @@ class Fun(commands.Cog):
                 try:
                     msg = await self.bot.wait_for('message', check = user_ans, timeout = 15.0)
                     if msg.content.lower() in correct:
-                        await ctx.send('<a:correct:839094567609434174> Correct! <@!' + str(msg.author.id) + '> got it right! 🎉' + '+' + str(points) + ' points') 
+                        await ctx.send('<a:correct:839094567609434174> Correct! <@!{}> got it right! 🎉+{} points'.format(str(msg.author.id), str(points))) 
                         answered = True
                     else:
                         guesses += 1
@@ -160,12 +167,12 @@ class Fun(commands.Cog):
                             points = 0
                             await ctx.send('<a:wrong:839094469173182484> Incorrect! The correct answer was \'' + question['correct_answer']+ '\'! 0 points earned.')
                             answered = True
+                    await self.update_points(msg.author.id, points, ctx.guild.id)
                 except asyncio.TimeoutError:
                     points = 0
                     await ctx.send('<a:shakingbell:839095524187176970> Times up! The correct answer was \''+ html.unescape(question['correct_answer']) + '\'! 0 points earned.')
                     answered = True
-            trivia_in_use = False
-            await self.update_points(msg.author.id, points, ctx.guild.id)
+            self.trivia_in_use = False
 
     @commands.command()
     async def leaderboard(self,ctx):
@@ -178,16 +185,21 @@ class Fun(commands.Cog):
 
         user_text= ''
         points_text = ''
+        place = 1
         for i in range(len(users_points)):
             points_text += str(users_points[i][1]) + '\n'
-            if i == 0:
-                user_text += "`" + str(i+1) + "` 🥇 " + users[i].name + '\n'
-            elif i == 1:
-                user_text += "`" + str(i+1) + "` 🥈 " + users[i].name + '\n'
-            elif i == 2:
-                user_text += "`" + str(i+1) + "` 🥉 " + users[i].name + '\n'
-            else:
-                user_text += "`" + str(i+1) + "` " + users[i].name + '\n'
+            try:
+                if place == 1:
+                    user_text += "🥇 " + users[i].name + '\n'
+                elif place == 2:
+                    user_text += "🥈 " + users[i].name + '\n'
+                elif place == 3:
+                    user_text += "🥉 " + users[i].name + '\n'
+                else:
+                    user_text += "`" + str(place) + "` " + users[i].name + '\n'
+                place +=1
+            except AttributeError:
+                continue
 
 
         board = discord.Embed(
@@ -195,6 +207,8 @@ class Fun(commands.Cog):
             description = 'Earn points by playing my minigames!',
             colour = discord.Colour.dark_red()
         )
+        #user_text = "🥇 Example User\n🥈 Example User #2\n🥉 Example User #3\n`4` Example User #4\n`5` Example User #5"
+        #points_text = "112\n40\n36\n20\n17"
 
         board.add_field(name='User', value=user_text, inline=True)
         board.add_field(name='Points', value=points_text, inline=True)

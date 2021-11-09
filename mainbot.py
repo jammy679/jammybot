@@ -1,7 +1,6 @@
 import discord
 from discord.ext import commands
 import requests
-import sqlite3
 import os
 import asyncpg
 import asyncio
@@ -23,14 +22,15 @@ async def create_db_pool():
 # !!! IMPORTANT - POSTGRESQL DOES NOT LIKE TABLE NAMES WITH UPPERCASE LETTERS !!!
 
 @bot.event
-async def on_guild_join(guild):
+async def on_guild_join(guild): # when the bot joins a server, creates a table
     #column cannot be named 'user'
     await bot.pg_con.execute("""CREATE TABLE IF NOT EXISTS {}(user_id TEXT, points INTEGER)""".format("\""+str(guild.id) + "_leaderboard\"")) #userid is text because integer has numeric limit
     list_users = await bot.pg_con.fetch("SELECT user_id FROM \"{}_leaderboard\"".format(str(guild.id)))
-    members_list = guild.members 
+    members_list = guild.members #check if it joins but had already joined before and still has table
     for user in members_list:
         if user.bot == False:
-            await bot.pg_con.execute("INSERT INTO {} (user_id, points) VALUES ({}, 0);".format("\""+str(guild.id) + '_leaderboard\"', "\'"+str(user.id)+"\'"))
+            if str(user.id) not in list_users:
+                await bot.pg_con.execute("INSERT INTO {} (user_id, points) VALUES ({}, 0);".format("\""+str(guild.id) + '_leaderboard\"', "\'"+str(user.id)+"\'"))
 
 #when user join add them to leaderboard with 0 points, if they were in server before don't add them again
 @bot.event
@@ -40,7 +40,7 @@ async def on_member_join(member):
     if str(member.id) not in list_users:
         await bot.pg_con.execute("INSERT INTO {} (user_id, points) VALUES ({}, 0);".format("\""+str(member.guild.id) + '_leaderboard\"', "\'"+str(member.id)+"\'"))
 
-@bot.command()
+@bot.command() #bot is an object (commands.Bot) and in the object it will add the function 'help' to
 async def help(ctx):
     helpemb = discord.Embed(
         title = 'Commands',
@@ -72,7 +72,7 @@ async def help(ctx):
 
 @bot.event
 async def on_ready():
-    await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name='!j help c:'))
+    await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name='!j help'))
     print('Ready')
 
 @bot.command()
@@ -94,11 +94,19 @@ async def ping(ctx):
 
 @bot.command()
 async def load(ctx,extension):
-    bot.load_extension(f'commands.{extension}')
+    if ctx.author.id == BOT_OWNER_ID:
+        bot.load_extension(f'commands.{extension}')
+        await ctx.send(extension + ' loaded.')
+    else:
+        await ctx.send('Only the developer can run this command.')
 
 @bot.command()
 async def unload(ctx,extension):
-    bot.unload_extension(f'commands.{extension}')
+    if ctx.author.id == BOT_OWNER_ID:
+        bot.unload_extension(f'commands.{extension}')
+        await ctx.send(extension + ' unloaded.')
+    else:
+        await ctx.send('Only the developer can run this command.')
 
 for filename in os.listdir('./commands'):
     if filename.endswith('.py'):
