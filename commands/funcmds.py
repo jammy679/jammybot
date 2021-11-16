@@ -55,6 +55,7 @@ class Fun(commands.Cog):
                     guess = await self.bot.wait_for('message', check = check, timeout = 10.0)
                     if guess.content == ans:
                         await ctx.send('Correct! <@!{}> got it right! <a:correct:839094567609434174> +{} points {}'.format(guess.author.id, str(points), hint_text))
+                        await self.update_points(guess.author.id, points, ctx.guild.id)
                         finished = True
                     else:
                         number_of_guesses += 1
@@ -68,8 +69,6 @@ class Fun(commands.Cog):
                     finished = True
             if number_of_guesses == 8:
                 await ctx.send('You\'re out of guesses! The word was \''+ ans + '\'! <a:wrong:839094469173182484>')
-            if guess != '':
-                await self.update_points(guess.author.id, points, ctx.guild.id)
             self.scramble_in_use = False 
 
     async def update_points(self,userid, points,guildid):
