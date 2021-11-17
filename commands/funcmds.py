@@ -151,6 +151,7 @@ class Fun(commands.Cog):
                     msg = await self.bot.wait_for('message', check = user_ans, timeout = 15.0)
                     if msg.content.lower() in correct:
                         await ctx.send('<a:correct:839094567609434174> Correct! <@!{}> got it right! 🎉+{} points'.format(str(msg.author.id), str(points))) 
+                        await self.update_points(msg.author.id, points, ctx.guild.id)
                         answered = True
                     else:
                         guesses += 1
@@ -159,16 +160,12 @@ class Fun(commands.Cog):
                             if guesses != 2:
                                 await ctx.send('<a:shakingbell:839095524187176970> Incorrect! You have one guess left.')
                             else:
-                                points = 0
                                 await ctx.send('<a:wrong:839094469173182484> Incorrect! You have zero guesses left. The correct answer was \'' + html.unescape(question['correct_answer']) + '\'! 0 points earned.')
                                 answered = True
                         elif question['type'] == 'boolean':
-                            points = 0
                             await ctx.send('<a:wrong:839094469173182484> Incorrect! The correct answer was \'' + question['correct_answer']+ '\'! 0 points earned.')
                             answered = True
-                    await self.update_points(msg.author.id, points, ctx.guild.id)
                 except asyncio.TimeoutError:
-                    points = 0
                     await ctx.send('<a:shakingbell:839095524187176970> Times up! The correct answer was \''+ html.unescape(question['correct_answer']) + '\'! 0 points earned.')
                     answered = True
             self.trivia_in_use = False
