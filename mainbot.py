@@ -19,7 +19,7 @@ async def create_db_pool():
     bot.pg_con = await asyncpg.create_pool(DATABASE_URL)
 
 
-# !!! IMPORTANT - POSTGRESQL DOES NOT LIKE TABLE NAMES WITH UPPERCASE LETTERS !!!
+#PostgreSQL does not like table names with uppercase letters
 
 @bot.event
 async def on_guild_join(guild): # when the bot joins a server, creates a table
@@ -94,7 +94,7 @@ async def ping(ctx):
 
 @bot.command()
 async def load(ctx,extension):
-    if ctx.author.id == BOT_OWNER_ID:
+    if ctx.author.id == myid:
         bot.load_extension(f'commands.{extension}')
         await ctx.send(extension + ' loaded.')
     else:
@@ -102,7 +102,7 @@ async def load(ctx,extension):
 
 @bot.command()
 async def unload(ctx,extension):
-    if ctx.author.id == BOT_OWNER_ID:
+    if ctx.author.id == myid:
         bot.unload_extension(f'commands.{extension}')
         await ctx.send(extension + ' unloaded.')
     else:
@@ -114,3 +114,4 @@ for filename in os.listdir('./commands'):
 
 bot.loop.run_until_complete(create_db_pool())
 bot.run(AUTH_TOKEN)
+#BOT_OWNER_ID

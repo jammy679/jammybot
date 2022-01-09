@@ -125,9 +125,8 @@ class Fun(commands.Cog):
 
             def user_ans(answer):
                 if question['type'] == 'multiple':
-                    k = ' '.join(answers.keys())
                     v = ' '.join(answers.values())
-                    return answer.author.bot == False and (answer.content.lower() in k.lower() or answer.content.lower() in v.lower())
+                    return answer.author.bot == False and (answer.content.upper() in answers.keys() or answer.content.lower() in v.lower())
                 elif question['type'] == 'boolean':
                     o = ' '.join(options)
                     return answer.author.bot == False and answer.content.lower() in o.lower()
