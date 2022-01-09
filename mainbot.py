@@ -92,9 +92,11 @@ async def ping(ctx):
     pingmsg = await ctx.send('Pinging..')
     await pingmsg.edit(content=f'{round(bot.latency * 1000)}ms')
 
+
+#only the owner of the bot can load or unload extensions
 @bot.command()
 async def load(ctx,extension):
-    if ctx.author.id == myid:
+    if ctx.author.id == BOT_OWNER_ID:
         bot.load_extension(f'commands.{extension}')
         await ctx.send(extension + ' loaded.')
     else:
@@ -102,7 +104,7 @@ async def load(ctx,extension):
 
 @bot.command()
 async def unload(ctx,extension):
-    if ctx.author.id == myid:
+    if ctx.author.id == BOT_OWNER_ID:
         bot.unload_extension(f'commands.{extension}')
         await ctx.send(extension + ' unloaded.')
     else:
@@ -114,4 +116,3 @@ for filename in os.listdir('./commands'):
 
 bot.loop.run_until_complete(create_db_pool())
 bot.run(AUTH_TOKEN)
-#BOT_OWNER_ID
