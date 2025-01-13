@@ -9,10 +9,10 @@ from dotenv import load_dotenv
 
 # loading env variables
 load_dotenv()
-#DATABASE_URL = os.getenv("DATABASE_URL")
-DB_NAME = os.getenv("DB_NAME") 
-DB_USER = os.getenv("DB_USER") 
-DB_PASS = os.getenv("DB_PASS") 
+DATABASE_URL = os.getenv("DATABASE_URL")
+# DB_NAME = os.getenv("DB_NAME") 
+# DB_USER = os.getenv("DB_USER") 
+# DB_PASS = os.getenv("DB_PASS") 
 AUTH_TOKEN = os.getenv("AUTH_TOKEN")
 
 intents = discord.Intents.default()
@@ -24,8 +24,8 @@ bot.remove_command('help')
 
 
 async def create_db_pool():
-    #bot.pg_con = await asyncpg.create_pool(DATABASE_URL)
-    bot.pg_con = await asyncpg.create_pool(database=DB_NAME,user=DB_USER,password=DB_PASS)
+    bot.pg_con = await asyncpg.create_pool(DATABASE_URL)
+    # bot.pg_con = await asyncpg.create_pool(database=DB_NAME,user=DB_USER,password=DB_PASS)
 
 
 # !!! IMPORTANT - POSTGRESQL DOES NOT LIKE TABLE NAMES WITH UPPERCASE LETTERS !!!
