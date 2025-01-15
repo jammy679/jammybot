@@ -1,7 +1,5 @@
 <script>
-	export let utilities;
-	export let minigames;
-	export let other;
+	let { utilities, minigames, other } = $props();
 </script>
 
 <main>
