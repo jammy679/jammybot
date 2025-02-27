@@ -72,10 +72,11 @@ class Fun(commands.Cog):
             self.scramble_in_use = False 
 
     async def update_points(self, userid, points, guildid):
-        user_points = await self.bot.pg_con.fetch("SELECT points FROM \"{}_leaderboard\" WHERE user_id = \'{}\'".format(str(guildid), str(userid)))
-        user_points= [list(u)[0] for u in user_points][0]
-        user_points += points
-        await self.bot.pg_con.execute("UPDATE \"{}_leaderboard\" SET points = {} WHERE user_id = \'{}\'".format(str(guildid), str(user_points), str(userid)))
+        async with self.bot.pg_con_pool.acquire() as pg_con:
+            user_points = await pg_con.fetch("SELECT points FROM \"{}_leaderboard\" WHERE user_id = \'{}\'".format(str(guildid), str(userid)))
+            user_points= [list(u)[0] for u in user_points][0]
+            user_points += points
+            await pg_con.execute("UPDATE \"{}_leaderboard\" SET points = {} WHERE user_id = \'{}\'".format(str(guildid), str(user_points), str(userid)))
 
     @commands.command()
     async def trivia(self,ctx):
@@ -176,7 +177,9 @@ class Fun(commands.Cog):
 
     @commands.command()
     async def leaderboard(self,ctx):
-        users_points = await self.bot.pg_con.fetch("SELECT * FROM \"{}_leaderboard\"".format(str(ctx.guild.id)))
+        async with self.bot.pg_con_pool.acquire() as pg_con:
+            users_points = await pg_con.fetch("SELECT * FROM \"{}_leaderboard\"".format(str(ctx.guild.id)))
+
         users_points = [tuple(u) for u in users_points]
         def second_elem(elem):
             return elem[1]

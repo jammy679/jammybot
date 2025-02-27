@@ -22,9 +22,8 @@ bot = commands.Bot(command_prefix = '!j ', intents = intents)
 bot.remove_command('help')
 
 
-
 async def create_db_pool():
-    bot.pg_con = await asyncpg.create_pool(DATABASE_URL)
+    bot.pg_con_pool = await asyncpg.create_pool(DATABASE_URL)
     # bot.pg_con = await asyncpg.create_pool(database=DB_NAME,user=DB_USER,password=DB_PASS)
 
 
@@ -32,22 +31,25 @@ async def create_db_pool():
 
 @bot.event
 async def on_guild_join(guild): # when the bot joins a server, creates a table
-    #column cannot be named 'user'
-    await bot.pg_con.execute("""CREATE TABLE IF NOT EXISTS {}(user_id TEXT, points INTEGER)""".format("\""+str(guild.id) + "_leaderboard\"")) #userid is text because integer has numeric limit
-    list_users = await bot.pg_con.fetch("SELECT user_id FROM \"{}_leaderboard\"".format(str(guild.id)))
-    members_list = guild.members #check if it joins but had already joined before and still has table
-    for user in members_list:
-        if user.bot == False:
-            if str(user.id) not in list_users:
-                await bot.pg_con.execute("INSERT INTO {} (user_id, points) VALUES ({}, 0);".format("\""+str(guild.id) + '_leaderboard\"', "\'"+str(user.id)+"\'"))
+    # acquire connection, then release back to pool
+    async with bot.pg_con_pool.acquire() as pg_con: 
+        #column cannot be named 'user'
+        await pg_con.execute("""CREATE TABLE IF NOT EXISTS {}(user_id TEXT, points INTEGER)""".format("\""+str(guild.id) + "_leaderboard\"")) #userid is text because integer has numeric limit
+        list_users = await pg_con.fetch("SELECT user_id FROM \"{}_leaderboard\"".format(str(guild.id)))
+        members_list = guild.members #check if it joins but had already joined before and still has table
+        for user in members_list:
+            if user.bot == False:
+                if str(user.id) not in list_users:
+                    await pg_con.execute("INSERT INTO {} (user_id, points) VALUES ({}, 0);".format("\""+str(guild.id) + '_leaderboard\"', "\'"+str(user.id)+"\'"))
 
 #when user join add them to leaderboard with 0 points, if they were in server before don't add them again
 @bot.event
 async def on_member_join(member):
-    list_users = await bot.pg_con.fetch("SELECT user_id FROM \"{}_leaderboard\"".format(str(member.guild.id)))
-    list_users = [(list(u))[0] for u in list_users] #convert record object to list, for some reason cannot use its attributes
-    if str(member.id) not in list_users:
-        await bot.pg_con.execute("INSERT INTO {} (user_id, points) VALUES ({}, 0);".format("\""+str(member.guild.id) + '_leaderboard\"', "\'"+str(member.id)+"\'"))
+    async with bot.pg_con_pool.acquire() as pg_con: 
+        list_users = await pg_con.fetch("SELECT user_id FROM \"{}_leaderboard\"".format(str(member.guild.id)))
+        list_users = [(list(u))[0] for u in list_users] #convert record object to list, for some reason cannot use its attributes
+        if str(member.id) not in list_users:
+            await pg_con.execute("INSERT INTO {} (user_id, points) VALUES ({}, 0);".format("\""+str(member.guild.id) + '_leaderboard\"', "\'"+str(member.id)+"\'"))
 
 @bot.command() #bot is an object (commands.Bot) and in the object it will add the function 'help' to
 async def help(ctx):
@@ -122,5 +124,6 @@ async def main():
         if filename.endswith('.py'):
             await bot.load_extension(f'commands.{filename[:-3]}')
 
+    await bot.start(token=AUTH_TOKEN)
+
 asyncio.run(main())
-bot.run(AUTH_TOKEN)
