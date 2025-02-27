@@ -1,10 +1,10 @@
 <script>
-	let { utilities, minigames, other } = $props();
+	import { utilities, minigames, other } from "../main.js";
 </script>
 
 <main>
 	<div class = 'header'>
-		<h1 class = 'h1-header'><strong>JuliaBot Discord Bot</strong></h1>	
+		<h1 class = 'h1-header'><strong>JammyBot Discord Bot</strong></h1>	
 	</div>
 	<div class = 'content'>
 		<div class = 'add-bot'>
@@ -34,9 +34,11 @@
 					<ul>
 						{@html other}
 					</ul>
+                    <p>Poll commands coming to this page soon!</p>
 				</div>
 			</div>
 		</div>
+
 	</div>
 </main>
 
